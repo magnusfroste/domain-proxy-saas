@@ -13,6 +13,7 @@
 
 const express = require('express');
 const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs-extra');
 const axios = require('axios');
@@ -57,10 +58,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(session({
+  store: new SQLiteStore({ db: 'sessions.db', dir: DATA_DIR }),
   secret: process.env.SESSION_SECRET || 'change-me-in-production',
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: !config.isDev }
+  saveUninitialized: false,
+  cookie: { secure: !config.isDev, maxAge: 24 * 60 * 60 * 1000 } // 24 hours
 }));
 
 // Initialize database schema
@@ -214,6 +216,11 @@ const styles = `
 // =============================================================================
 // AUTH ROUTES
 // =============================================================================
+
+// Health check for deployment monitoring
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 app.get('/login', (req, res) => {
   const emailValue = config.isDev ? config.demo.email : '';
