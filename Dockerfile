@@ -31,6 +31,6 @@ COPY public ./public
 RUN mkdir -p /app/data && chown -R node:node /app/data
 
 USER node
-EXPOSE 80
+EXPOSE 3001
 
 CMD ["npm", "start"]
