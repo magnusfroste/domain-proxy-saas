@@ -26,7 +26,7 @@ const app = express();
 // =============================================================================
 
 const config = {
-  port: process.env.PORT || 3001,
+  port: process.env.PORT || 80,
   
   // DomainProxy settings - use Cloud or your self-hosted instance
   domainProxy: {
