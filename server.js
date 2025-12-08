@@ -153,7 +153,7 @@ const domainProxyClient = {
 function autoLoginDemo(req, res, next) {
   if (!req.session.userId) {
     db.get('SELECT id FROM users WHERE email = ?', [config.demo.email], (err, user) => {
-      if (user) {
+      if (!err && user) {
         req.session.userId = user.id;
         req.session.companyName = 'Demo Company';
       }
