@@ -583,19 +583,38 @@ app.get('/dashboard/delete/:id', autoLoginDemo, async (req, res) => {
   const userId = req.session.userId;
   const tenantId = req.params.id;
   
+  console.log(`🔍 DELETE request: userId=${userId}, tenantId=${tenantId}`);
+  
   // Get tenant info first
   db.get('SELECT * FROM tenants WHERE id = ? AND user_id = ?', [tenantId, userId], async (err, tenant) => {
-    if (tenant) {
-      // Try to delete from DomainProxy
-      try {
-        await domainProxyClient.deleteProxy(tenant.subdomain, tenant.base_domain);
-        console.log(`✅ Proxy deleted: ${tenant.subdomain}.${tenant.base_domain}`);
-      } catch (err) {
-        console.error(`⚠️ Failed to delete proxy: ${err.message}`);
-      }
+    if (err) {
+      console.error('❌ DB error getting tenant:', err);
+      return res.redirect('/dashboard?error=db');
     }
     
-    db.run('DELETE FROM tenants WHERE id = ? AND user_id = ?', [tenantId, userId], () => {
+    if (!tenant) {
+      console.log('⚠️ Tenant not found or not owned by user');
+      return res.redirect('/dashboard?error=notfound');
+    }
+    
+    console.log(`📝 Found tenant: ${tenant.subdomain}.${tenant.base_domain}`);
+    
+    // Try to delete from DomainProxy
+    try {
+      await domainProxyClient.deleteProxy(tenant.subdomain, tenant.base_domain);
+      console.log(`✅ Proxy deleted from DomainProxy: ${tenant.subdomain}.${tenant.base_domain}`);
+    } catch (err) {
+      console.error(`⚠️ Failed to delete proxy from DomainProxy: ${err.message}`);
+      // Continue anyway - still delete from local DB
+    }
+    
+    db.run('DELETE FROM tenants WHERE id = ? AND user_id = ?', [tenantId, userId], (deleteErr) => {
+      if (deleteErr) {
+        console.error('❌ DB error deleting tenant:', deleteErr);
+        return res.redirect('/dashboard?error=delete');
+      }
+      
+      console.log(`✅ Tenant deleted from local DB: ID ${tenantId}`);
       res.redirect('/dashboard?deleted=1');
     });
   });
