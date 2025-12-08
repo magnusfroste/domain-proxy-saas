@@ -289,6 +289,10 @@ app.get('/test', (req, res) => {
   res.send('Test route working!');
 });
 
+app.get('/health', (req, res) => {
+  res.send('OK');
+});
+
 app.get('/login', (req, res) => {
   const emailValue = config.demo.email;
   const passwordValue = config.demo.password;
