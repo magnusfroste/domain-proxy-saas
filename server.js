@@ -99,18 +99,18 @@ db.serialize(() => {
   });
 });
 
-// API: Get proxies from DomainProxy
-const getProxiesFromAPI = async () => {
-  try {
-    const response = await axios.get(`${config.domainProxy.url}/api/v1/proxies`, {
-      headers: { 'X-API-Key': config.domainProxy.apiKey }
-    });
-    return response.data;
-  } catch (err) {
-    console.error('Failed to fetch proxies:', err.message);
-    return [];
-  }
-};
+// // API: Get proxies from DomainProxy
+// const getProxiesFromAPI = async () => {
+//   try {
+//     const response = await axios.get(`${config.domainProxy.url}/api/v1/proxies`, {
+//       headers: { 'X-API-Key': config.domainProxy.apiKey }
+//     });
+//     return response.data;
+//   } catch (err) {
+//     console.error('Failed to fetch proxies:', err.message);
+//     return [];
+//   }
+// };
 
 const domainProxyClient = {
   async createTenant(baseDomain) {
