@@ -99,9 +99,18 @@ db.serialize(() => {
   });
 });
 
-// =============================================================================
-// DOMAINPROXY API CLIENT
-// =============================================================================
+// API: Get proxies from DomainProxy
+const getProxiesFromAPI = async () => {
+  try {
+    const response = await axios.get(`${config.domainProxy.url}/api/v1/proxies`, {
+      headers: { 'X-API-Key': config.domainProxy.apiKey }
+    });
+    return response.data;
+  } catch (err) {
+    console.error('Failed to fetch proxies:', err.message);
+    return [];
+  }
+};
 
 const domainProxyClient = {
   async createTenant(baseDomain) {
@@ -298,13 +307,17 @@ app.get('/logout', (req, res) => {
 // DASHBOARD ROUTES
 // =============================================================================
 
-app.get('/dashboard', autoLoginDemo, (req, res) => {
+app.get('/dashboard', autoLoginDemo, async (req, res) => {
   const userId = req.session.userId;
   
-  db.all('SELECT * FROM tenants WHERE user_id = ? ORDER BY created_at DESC', [userId], (err, tenants) => {
+  db.all('SELECT * FROM tenants WHERE user_id = ? ORDER BY created_at DESC', [userId], async (err, tenants) => {
     if (err) tenants = [];
     
     const proxyDomain = new URL(config.domainProxy.url).hostname;
+    const synced = req.query.synced;
+    
+    // Get proxies from API if synced
+    const apiProxies = synced ? await getProxiesFromAPI() : [];
     
     const tenantCards = tenants.map(t => {
       const fullDomain = `${t.subdomain}.${t.base_domain}`;
@@ -392,7 +405,27 @@ app.get('/dashboard', autoLoginDemo, (req, res) => {
   </div>
 
   <h2>Your Domains</h2>
+  <div style="margin-bottom:20px;">
+    <form method="post" action="/dashboard/sync-proxies" style="display:inline;">
+      <button type="submit" class="btn" style="background:#6366f1;">🔄 Sync from DomainProxy API</button>
+    </form>
+    ${synced ? `<span style="color:#22c55e;margin-left:10px;">Synced ${synced} proxies from API</span>` : ''}
+  </div>
   ${tenantCards}
+  
+  ${apiProxies.length > 0 ? `
+  <h2>DomainProxy API Proxies</h2>
+  <div style="margin-bottom:10px;color:#888;font-size:0.9em;">Live data from ${config.domainProxy.url}</div>
+  ${apiProxies.map(p => `
+    <div class="card">
+      <div class="tenant-info">
+        <h3>${p.subdomain}.${p.base_domain}</h3>
+        <p>→ ${p.target_url}</p>
+        <p style="color:#666;font-size:0.9rem;">Created: ${new Date(p.created_at).toLocaleString()}</p>
+      </div>
+    </div>
+  `).join('')}
+  ` : ''}
   
   <div style="margin-top:40px;padding:20px;background:#111;border-radius:8px;border:1px solid #222;">
     <h3 style="margin-bottom:10px;">📖 How it works</h3>
@@ -539,7 +572,10 @@ app.post('/dashboard/check-status/:id', autoLoginDemo, async (req, res) => {
   });
 });
 
-app.post('/dashboard/delete/:id', autoLoginDemo, async (req, res) => {
+app.post('/dashboard/sync-proxies', autoLoginDemo, async (req, res) => {
+  const proxies = await getProxiesFromAPI();
+  res.redirect('/dashboard?synced=' + proxies.length);
+});
   const userId = req.session.userId;
   const tenantId = req.params.id;
   
