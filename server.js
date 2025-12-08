@@ -635,7 +635,7 @@ app.post('/dashboard/sync-proxies', autoLoginDemo, async (req, res) => {
   res.redirect('/dashboard?synced=' + proxies.length);
 });
 
-app.get('/dashboard/delete/:id', autoLoginDemo, async (req, res) => {
+app.post('/dashboard/delete/:id', autoLoginDemo, async (req, res) => {
   console.log('🚨 DELETE ROUTE HIT:', req.url, req.params);
   const userId = req.session.userId;
   const tenantId = req.params.id;
