@@ -309,15 +309,18 @@ app.get('/logout', (req, res) => {
 
 app.get('/dashboard', autoLoginDemo, async (req, res) => {
   const userId = req.session.userId;
+  const synced = req.query.synced;
   
-  db.all('SELECT * FROM tenants WHERE user_id = ? ORDER BY created_at DESC', [userId], async (err, tenants) => {
+  // Get proxies from API if synced
+  let apiProxies = [];
+  if (synced) {
+    apiProxies = await getProxiesFromAPI();
+  }
+  
+  db.all('SELECT * FROM tenants WHERE user_id = ? ORDER BY created_at DESC', [userId], (err, tenants) => {
     if (err) tenants = [];
     
     const proxyDomain = new URL(config.domainProxy.url).hostname;
-    const synced = req.query.synced;
-    
-    // Get proxies from API if synced
-    const apiProxies = synced ? await getProxiesFromAPI() : [];
     
     const tenantCards = tenants.map(t => {
       const fullDomain = `${t.subdomain}.${t.base_domain}`;
