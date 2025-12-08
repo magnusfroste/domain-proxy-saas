@@ -52,7 +52,13 @@ const config = {
 
 const DATA_DIR = path.join(__dirname, 'data');
 fs.ensureDirSync(DATA_DIR);
-const db = new sqlite3.Database(path.join(DATA_DIR, 'saas.db'));
+const db = new sqlite3.Database(path.join(DATA_DIR, 'saas.db'), (err) => {
+  if (err) {
+    console.error('❌ Failed to open database:', err);
+    process.exit(1);
+  }
+  console.log('✅ Database opened successfully');
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -785,19 +791,14 @@ app.use((req, res) => {
 });
 
 // =============================================================================
-// START SERVER
+// SERVER STARTUP
 // =============================================================================
 
-app.listen(config.port, '0.0.0.0', () => {
-  console.log('');
-  console.log(`🚀 SaaS Starter running!`);
-  console.log(`   Deployed: ${new Date().toISOString()}`);
-  console.log('');
-  console.log(`   Local:        http://localhost:${config.port}`);
-  console.log(`   Dashboard:    http://localhost:${config.port}/dashboard`);
-  console.log(`   Demo:         ${config.demo.email} / ${config.demo.password}`);
-  console.log('');
-  console.log(`   DomainProxy:  ${config.domainProxy.url}`);
-  console.log(`   API Key:      ${config.domainProxy.apiKey.substring(0, 10)}...`);
-  console.log('');
-});
+try {
+  app.listen(config.port, () => {
+    console.log(`🚀 SaaS Starter running!\n   Deployed: ${new Date().toISOString()}\n\n   Local:        http://localhost:${config.port}\n   Dashboard:    http://localhost:${config.port}/dashboard\n   Demo:         ${config.demo.email} / ${config.demo.password}\n\n   DomainProxy:  ${config.domainProxy.url}\n   API Key:      ${config.domainProxy.apiKey.substring(0, 12)}...\n`);
+  });
+} catch (error) {
+  console.error('❌ Failed to start server:', error);
+  process.exit(1);
+}
