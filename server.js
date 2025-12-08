@@ -322,7 +322,10 @@ app.get('/dashboard', autoLoginDemo, (req, res) => {
             </div>
             <div class="tenant-actions">
               <a href="/dashboard/edit/${t.id}" class="btn btn-secondary">Edit</a>
-              <form method="post" action="/dashboard/delete/${t.id}" style="margin:0;" onsubmit="return confirm('Delete this domain?')">
+              <form method="post" action="/dashboard/check-status/${t.id}" style="margin:0;display:inline;">
+                <button type="submit" class="btn" style="background:#3b82f6;">Check Status</button>
+              </form>
+              <form method="post" action="/dashboard/delete/${t.id}" style="margin:0;display:inline;" onsubmit="return confirm('Delete this domain?')">
                 <button type="submit" class="btn btn-danger">Delete</button>
               </form>
             </div>
@@ -509,6 +512,29 @@ app.post('/dashboard/update/:id', autoLoginDemo, (req, res) => {
     [company_name, tagline, primary_color, content, tenantId, userId],
     () => res.redirect('/dashboard')
   );
+});
+
+app.post('/dashboard/check-status/:id', autoLoginDemo, async (req, res) => {
+  const userId = req.session.userId;
+  const tenantId = req.params.id;
+  
+  db.get('SELECT * FROM tenants WHERE id = ? AND user_id = ?', [tenantId, userId], async (err, tenant) => {
+    if (!tenant) return res.redirect('/dashboard');
+    
+    try {
+      const domain = `${tenant.subdomain}.${tenant.base_domain}`;
+      const result = await domainProxyClient.verifyDomain(domain);
+      
+      if (result.verified) {
+        db.run('UPDATE tenants SET domain_status = ? WHERE id = ?', ['active', tenantId]);
+      }
+      // If not verified, keep as is
+    } catch (err) {
+      console.error('Status check failed:', err.message);
+    }
+    
+    res.redirect('/dashboard');
+  });
 });
 
 app.post('/dashboard/delete/:id', autoLoginDemo, async (req, res) => {
