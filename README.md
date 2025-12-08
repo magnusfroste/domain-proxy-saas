@@ -46,7 +46,21 @@ npm install
 npm start
 ```
 
-## Environment Variables
+### Option 3: VPS Demo Mode
+
+If you're having issues with platforms like EasyPanel or Railway (where Traefik blocks forwarded headers), deploy directly on a VPS for testing:
+
+```bash
+# 1. Deploy to VPS (see deployment guide below)
+
+# 2. Set ENABLE_VPS_DEMO=true in .env
+# This bypasses host header detection and shows a demo tenant page
+
+# 3. Access your VPS IP/domain directly
+# The app will show a demo page instead of requiring custom domains
+```
+
+## Deployment Guide
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -57,6 +71,7 @@ npm start
 | `DEMO_EMAIL` | Demo login email | `demo@example.com` |
 | `DEMO_PASSWORD` | Demo login password | `demo123` |
 | `SESSION_SECRET` | Session encryption key | - |
+| `ENABLE_VPS_DEMO` | Enable VPS demo mode (bypasses host header checks) | `false` |
 
 ## How It Works
 

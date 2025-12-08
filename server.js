@@ -43,6 +43,9 @@ const config = {
     password: process.env.DEMO_PASSWORD || 'demo123',
   },
   
+  // VPS demo mode
+  enableVpsDemo: process.env.ENABLE_VPS_DEMO === 'true',
+  
   isDev: process.env.NODE_ENV !== 'production',
 };
 
@@ -714,6 +717,17 @@ app.get('/p/:encoded', (req, res) => {
 });
 
 app.get('/', autoLoginDemo, (req, res, next) => {
+  // If VPS demo mode, show demo tenant page
+  if (config.enableVpsDemo) {
+    const demoTenant = {
+      company_name: 'Demo SaaS',
+      tagline: 'Running in VPS Demo Mode',
+      primary_color: '#22c55e',
+      content: '<p>This is a demo running directly on VPS, bypassing host header issues from platforms like EasyPanel/Railway.</p><p>Custom domains would normally be detected here via DomainProxy.</p>'
+    };
+    return renderTenantPage(req, res, demoTenant);
+  }
+  
   // If accessed via custom domain, show tenant page
   if (req.tenant) {
     return renderTenantPage(req, res, req.tenant);
