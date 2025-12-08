@@ -212,6 +212,7 @@ function detectTenant(req, res, next) {
   
   const host = (req.headers['x-original-host'] || req.headers['x-forwarded-host'] || req.headers.host || '').toLowerCase();
   console.log('🔍 Host-based tenant detection:', { host, 'x-original-host': req.headers['x-original-host'], 'x-forwarded-host': req.headers['x-forwarded-host'], 'req.headers.host': req.headers.host });
+  console.log('🔍 All headers received:', JSON.stringify(req.headers, null, 2));
   const parts = host.split('.');
   
   // Skip if it's localhost or the main SaaS domain
