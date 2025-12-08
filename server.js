@@ -173,16 +173,27 @@ function requireLogin(req, res, next) {
 function detectTenant(req, res, next) {
   // Allow testing via ?tenant=domain query param
   if (req.query.tenant) {
+    console.log('🔍 Query tenant detection:', req.query.tenant);
     const parts = req.query.tenant.split('.');
     if (parts.length >= 2) {
       req.tenant = null; // Reset
       req.tenantHost = { subdomain: parts[0], baseDomain: parts.slice(1).join('.') };
+      console.log('📍 Looking up tenant:', req.tenantHost);
       // Look up tenant
       db.get(
         'SELECT * FROM tenants WHERE subdomain = ? AND base_domain = ?',
         [req.tenantHost.subdomain, req.tenantHost.baseDomain],
         (err, tenant) => {
-          req.tenant = tenant || null;
+          if (err) {
+            console.error('❌ DB error in tenant lookup:', err);
+            req.tenant = null;
+          } else if (tenant) {
+            console.log('✅ Found tenant via query:', tenant.company_name || tenant.subdomain);
+            req.tenant = tenant;
+          } else {
+            console.log('⚠️ No tenant found for:', req.tenantHost);
+            req.tenant = null;
+          }
           next();
         }
       );
