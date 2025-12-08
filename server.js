@@ -202,22 +202,34 @@ function detectTenant(req, res, next) {
   }
   
   const host = (req.headers['x-forwarded-host'] || req.headers.host || '').toLowerCase();
+  console.log('🔍 Host-based tenant detection:', { host, 'x-forwarded-host': req.headers['x-forwarded-host'], 'req.headers.host': req.headers.host });
   const parts = host.split('.');
   
   // Skip if it's localhost or the main SaaS domain
   if (host.includes('localhost') || parts.length < 2) {
+    console.log('⚠️ Skipping tenant detection (localhost or main domain)');
     req.tenant = null;
     return next();
   }
   
   const subdomain = parts[0];
   const baseDomain = parts.slice(1).join('.');
+  console.log('📍 Host-based lookup:', { subdomain, baseDomain });
   
   db.get(
     'SELECT * FROM tenants WHERE subdomain = ? AND base_domain = ?',
     [subdomain, baseDomain],
     (err, tenant) => {
-      req.tenant = tenant || null;
+      if (err) {
+        console.error('❌ DB error in host tenant lookup:', err);
+        req.tenant = null;
+      } else if (tenant) {
+        console.log('✅ Found tenant via host:', tenant.company_name || tenant.subdomain);
+        req.tenant = tenant;
+      } else {
+        console.log('⚠️ No tenant found for host:', { subdomain, baseDomain });
+        req.tenant = null;
+      }
       req.tenantHost = { subdomain, baseDomain };
       next();
     }
