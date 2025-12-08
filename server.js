@@ -561,6 +561,24 @@ app.post('/dashboard/check-status/:id', autoLoginDemo, async (req, res) => {
   });
 });
 
+// API: Get proxies from DomainProxy
+const getProxiesFromAPI = async () => {
+  try {
+    const response = await axios.get(`${config.domainProxy.url}/api/v1/proxies`, {
+      headers: { 'X-API-Key': config.domainProxy.apiKey }
+    });
+    return response.data;
+  } catch (err) {
+    console.error('Failed to fetch proxies:', err.message);
+    return [];
+  }
+};
+
+app.post('/dashboard/sync-proxies', autoLoginDemo, async (req, res) => {
+  const proxies = await getProxiesFromAPI();
+  res.redirect('/dashboard?synced=' + proxies.length);
+});
+
 // =============================================================================
 // TENANT PAGES (Host-based routing)
 // =============================================================================
