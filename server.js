@@ -614,7 +614,7 @@ app.use((req, res) => {
 <div class="container" style="text-align:center;margin-top:100px;">
   <h1 style="font-size:4rem;">404</h1>
   <p class="subtitle">Page not found</p>
-  <a href="/login" class="btn">Go to Login</a>
+  <a href="/dashboard" class="btn">Go to Dashboard</a>
 </div>
 </body>
 </html>
@@ -630,7 +630,7 @@ app.listen(config.port, '0.0.0.0', () => {
   console.log('🚀 SaaS Starter running!');
   console.log('');
   console.log(`   Local:        http://localhost:${config.port}`);
-  console.log(`   Login:        http://localhost:${config.port}/login`);
+  console.log(`   Dashboard:    http://localhost:${config.port}/dashboard`);
   console.log(`   Demo:         ${config.demo.email} / ${config.demo.password}`);
   console.log('');
   console.log(`   DomainProxy:  ${config.domainProxy.url}`);
