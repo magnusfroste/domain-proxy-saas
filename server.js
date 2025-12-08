@@ -140,9 +140,20 @@ const domainProxyClient = {
   }
 };
 
-// =============================================================================
-// MIDDLEWARE
-// =============================================================================
+// Auto-login demo user for demo purposes
+function autoLoginDemo(req, res, next) {
+  if (!req.session.userId) {
+    db.get('SELECT id FROM users WHERE email = ?', [config.demo.email], (err, user) => {
+      if (user) {
+        req.session.userId = user.id;
+        req.session.companyName = 'Demo Company';
+      }
+      next();
+    });
+  } else {
+    next();
+  }
+}
 
 function requireLogin(req, res, next) {
   if (req.session.userId) return next();
@@ -287,7 +298,7 @@ app.get('/logout', (req, res) => {
 // DASHBOARD ROUTES
 // =============================================================================
 
-app.get('/dashboard', requireLogin, (req, res) => {
+app.get('/dashboard', autoLoginDemo, (req, res) => {
   const userId = req.session.userId;
   
   db.all('SELECT * FROM tenants WHERE user_id = ? ORDER BY created_at DESC', [userId], (err, tenants) => {
@@ -397,7 +408,7 @@ app.get('/dashboard', requireLogin, (req, res) => {
   });
 });
 
-app.post('/dashboard/create', requireLogin, async (req, res) => {
+app.post('/dashboard/create', autoLoginDemo, async (req, res) => {
   const userId = req.session.userId;
   const { subdomain, base_domain, company_name, tagline, content } = req.body;
   
@@ -429,7 +440,7 @@ app.post('/dashboard/create', requireLogin, async (req, res) => {
   );
 });
 
-app.get('/dashboard/edit/:id', requireLogin, (req, res) => {
+app.get('/dashboard/edit/:id', autoLoginDemo, (req, res) => {
   const userId = req.session.userId;
   const tenantId = req.params.id;
   
@@ -487,7 +498,7 @@ app.get('/dashboard/edit/:id', requireLogin, (req, res) => {
   });
 });
 
-app.post('/dashboard/update/:id', requireLogin, (req, res) => {
+app.post('/dashboard/update/:id', autoLoginDemo, (req, res) => {
   const userId = req.session.userId;
   const tenantId = req.params.id;
   const { company_name, tagline, primary_color, content } = req.body;
@@ -500,7 +511,7 @@ app.post('/dashboard/update/:id', requireLogin, (req, res) => {
   );
 });
 
-app.post('/dashboard/delete/:id', requireLogin, async (req, res) => {
+app.post('/dashboard/delete/:id', autoLoginDemo, async (req, res) => {
   const userId = req.session.userId;
   const tenantId = req.params.id;
   
@@ -529,13 +540,13 @@ app.post('/dashboard/delete/:id', requireLogin, async (req, res) => {
 // This middleware detects custom domains and renders tenant pages
 app.use(detectTenant);
 
-app.get('/', (req, res, next) => {
+app.get('/', autoLoginDemo, (req, res, next) => {
   // If accessed via custom domain, show tenant page
   if (req.tenant) {
     return renderTenantPage(req, res, req.tenant);
   }
-  // Otherwise redirect to login
-  res.redirect('/login');
+  // Otherwise redirect to dashboard
+  res.redirect('/dashboard');
 });
 
 // Catch-all for tenant pages on custom domains
