@@ -369,6 +369,7 @@ app.get('/dashboard', autoLoginDemo, async (req, res) => {
             </div>
             <div class="tenant-actions">
               <a href="/dashboard/edit/${t.id}" class="btn btn-secondary">Edit</a>
+              <a href="/p/${t.subdomain}_${t.base_domain.replace(/\./g, '_')}" target="_blank" class="btn" style="background:#10b981;">🔗 Path Link</a>
               <a href="/?tenant=${fullDomain}" target="_blank" class="btn" style="background:#8b5cf6;">👁️ View Page</a>
               <form method="post" action="/dashboard/check-status/${t.id}" style="margin:0;display:inline;">
                 <button type="submit" class="btn" style="background:#3b82f6;">Check Status</button>
@@ -657,6 +658,39 @@ app.get('/dashboard/delete/:id', autoLoginDemo, async (req, res) => {
 
 // This middleware detects custom domains and renders tenant pages
 app.use(detectTenant);
+
+// Path-based tenant access: /p/subdomain_baseDomain
+app.get('/p/:encoded', (req, res) => {
+  const encoded = req.params.encoded;
+  const parts = encoded.split('_');
+  if (parts.length < 2) {
+    return res.redirect('/dashboard');
+  }
+  
+  const subdomain = parts[0];
+  const baseDomain = parts.slice(1).join('.'); // Reconstruct with dots
+  
+  console.log('🔍 Path-based tenant access:', { encoded, subdomain, baseDomain });
+  
+  db.get(
+    'SELECT * FROM tenants WHERE subdomain = ? AND base_domain = ?',
+    [subdomain, baseDomain],
+    (err, tenant) => {
+      if (err) {
+        console.error('❌ DB error in path tenant lookup:', err);
+        return res.redirect('/dashboard');
+      }
+      
+      if (!tenant) {
+        console.log('⚠️ No tenant found for path:', { subdomain, baseDomain });
+        return res.redirect('/dashboard');
+      }
+      
+      console.log('✅ Found tenant via path:', tenant.company_name || tenant.subdomain);
+      return renderTenantPage(req, res, tenant);
+    }
+  );
+});
 
 app.get('/', autoLoginDemo, (req, res, next) => {
   // If accessed via custom domain, show tenant page
