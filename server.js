@@ -416,20 +416,6 @@ app.get('/dashboard', autoLoginDemo, async (req, res) => {
   </div>
   ${tenantCards}
   
-  ${apiProxies.length > 0 ? `
-  <h2>DomainProxy API Proxies</h2>
-  <div style="margin-bottom:10px;color:#888;font-size:0.9em;">Live data from ${config.domainProxy.url}</div>
-  ${apiProxies.map(p => `
-    <div class="card">
-      <div class="tenant-info">
-        <h3>${p.subdomain}.${p.base_domain}</h3>
-        <p>→ ${p.target_url}</p>
-        <p style="color:#666;font-size:0.9rem;">Created: ${new Date(p.created_at).toLocaleString()}</p>
-      </div>
-    </div>
-  `).join('')}
-  ` : ''}
-  
   <div style="margin-top:40px;padding:20px;background:#111;border-radius:8px;border:1px solid #222;">
     <h3 style="margin-bottom:10px;">📖 How it works</h3>
     <ol style="color:#888;padding-left:20px;">
@@ -572,31 +558,6 @@ app.post('/dashboard/check-status/:id', autoLoginDemo, async (req, res) => {
     }
     
     res.redirect('/dashboard');
-  });
-});
-
-app.post('/dashboard/sync-proxies', autoLoginDemo, async (req, res) => {
-  const proxies = await getProxiesFromAPI();
-  res.redirect('/dashboard?synced=' + proxies.length);
-});
-  const userId = req.session.userId;
-  const tenantId = req.params.id;
-  
-  // Get tenant info first
-  db.get('SELECT * FROM tenants WHERE id = ? AND user_id = ?', [tenantId, userId], async (err, tenant) => {
-    if (tenant) {
-      // Try to delete from DomainProxy
-      try {
-        await domainProxyClient.deleteProxy(tenant.subdomain, tenant.base_domain);
-        console.log(`✅ Proxy deleted: ${tenant.subdomain}.${tenant.base_domain}`);
-      } catch (err) {
-        console.error(`⚠️ Failed to delete proxy: ${err.message}`);
-      }
-    }
-    
-    db.run('DELETE FROM tenants WHERE id = ? AND user_id = ?', [tenantId, userId], () => {
-      res.redirect('/dashboard');
-    });
   });
 });
 
