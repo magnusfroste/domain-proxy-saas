@@ -171,6 +171,25 @@ function requireLogin(req, res, next) {
 
 // Detect if request is from a custom domain (tenant page)
 function detectTenant(req, res, next) {
+  // Allow testing via ?tenant=domain query param
+  if (req.query.tenant) {
+    const parts = req.query.tenant.split('.');
+    if (parts.length >= 2) {
+      req.tenant = null; // Reset
+      req.tenantHost = { subdomain: parts[0], baseDomain: parts.slice(1).join('.') };
+      // Look up tenant
+      db.get(
+        'SELECT * FROM tenants WHERE subdomain = ? AND base_domain = ?',
+        [req.tenantHost.subdomain, req.tenantHost.baseDomain],
+        (err, tenant) => {
+          req.tenant = tenant || null;
+          next();
+        }
+      );
+      return;
+    }
+  }
+  
   const host = (req.headers['x-forwarded-host'] || req.headers.host || '').toLowerCase();
   const parts = host.split('.');
   
@@ -339,6 +358,7 @@ app.get('/dashboard', autoLoginDemo, async (req, res) => {
             </div>
             <div class="tenant-actions">
               <a href="/dashboard/edit/${t.id}" class="btn btn-secondary">Edit</a>
+              <a href="/?tenant=${fullDomain}" target="_blank" class="btn" style="background:#8b5cf6;">👁️ View Page</a>
               <form method="post" action="/dashboard/check-status/${t.id}" style="margin:0;display:inline;">
                 <button type="submit" class="btn" style="background:#3b82f6;">Check Status</button>
               </form>
