@@ -370,7 +370,6 @@ app.get('/dashboard', autoLoginDemo, async (req, res) => {
             <div class="tenant-actions">
               <a href="/dashboard/edit/${t.id}" class="btn btn-secondary">Edit</a>
               <a href="/p/${t.subdomain}_${t.base_domain.replace(/\./g, '_')}" target="_blank" class="btn" style="background:#10b981;">🔗 Path Link</a>
-              <a href="/?tenant=${fullDomain}" target="_blank" class="btn" style="background:#8b5cf6;">👁️ View Page</a>
               <form method="post" action="/dashboard/check-status/${t.id}" style="margin:0;display:inline;">
                 <button type="submit" class="btn" style="background:#3b82f6;">Check Status</button>
               </form>
