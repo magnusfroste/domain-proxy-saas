@@ -579,6 +579,28 @@ app.post('/dashboard/sync-proxies', autoLoginDemo, async (req, res) => {
   res.redirect('/dashboard?synced=' + proxies.length);
 });
 
+app.get('/dashboard/delete/:id', autoLoginDemo, async (req, res) => {
+  const userId = req.session.userId;
+  const tenantId = req.params.id;
+  
+  // Get tenant info first
+  db.get('SELECT * FROM tenants WHERE id = ? AND user_id = ?', [tenantId, userId], async (err, tenant) => {
+    if (tenant) {
+      // Try to delete from DomainProxy
+      try {
+        await domainProxyClient.deleteProxy(tenant.subdomain, tenant.base_domain);
+        console.log(`✅ Proxy deleted: ${tenant.subdomain}.${tenant.base_domain}`);
+      } catch (err) {
+        console.error(`⚠️ Failed to delete proxy: ${err.message}`);
+      }
+    }
+    
+    db.run('DELETE FROM tenants WHERE id = ? AND user_id = ?', [tenantId, userId], () => {
+      res.redirect('/dashboard?deleted=1');
+    });
+  });
+});
+
 // =============================================================================
 // TENANT PAGES (Host-based routing)
 // =============================================================================
