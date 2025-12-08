@@ -310,7 +310,9 @@ app.get('/dashboard', autoLoginDemo, (req, res) => {
       const fullDomain = `${t.subdomain}.${t.base_domain}`;
       const statusBadge = t.domain_status === 'active' 
         ? '<span class="badge badge-success">Active</span>'
-        : '<span class="badge badge-pending">Pending DNS</span>';
+        : t.domain_status === 'registered'
+        ? '<span class="badge badge-pending">Registered (DNS Pending)</span>'
+        : '<span class="badge badge-pending">Pending</span>';
       
       return `
         <div class="card">
