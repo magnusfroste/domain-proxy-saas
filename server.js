@@ -234,8 +234,8 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  const emailValue = config.isDev ? config.demo.email : '';
-  const passwordValue = config.isDev ? config.demo.password : '';
+  const emailValue = config.demo.email;
+  const passwordValue = config.demo.password;
   
   res.send(`
 <!DOCTYPE html>
