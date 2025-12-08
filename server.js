@@ -714,7 +714,8 @@ app.use((req, res) => {
 
 app.listen(config.port, '0.0.0.0', () => {
   console.log('');
-  console.log('🚀 SaaS Starter running!');
+  console.log(`🚀 SaaS Starter running!`);
+  console.log(`   Deployed: ${new Date().toISOString()}`);
   console.log('');
   console.log(`   Local:        http://localhost:${config.port}`);
   console.log(`   Dashboard:    http://localhost:${config.port}/dashboard`);
