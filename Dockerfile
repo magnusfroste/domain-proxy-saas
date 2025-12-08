@@ -16,6 +16,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Suppress npm update notices
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false
+
 # Copy package files
 COPY package*.json ./
 
