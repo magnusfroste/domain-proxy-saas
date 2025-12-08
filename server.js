@@ -237,9 +237,8 @@ const styles = `
 // AUTH ROUTES
 // =============================================================================
 
-// Health check for deployment monitoring
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/test', (req, res) => {
+  res.send('Test route working!');
 });
 
 app.get('/login', (req, res) => {
