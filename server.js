@@ -65,7 +65,7 @@ const db = new sqlite3.Database(path.join(DATA_DIR, 'saas.db'), (err) => {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+// NOTE: express.static moved after routes to allow tenant detection on /
 app.use(session({
   store: new SQLiteStore({ db: 'sessions.db', dir: DATA_DIR }),
   secret: process.env.SESSION_SECRET || 'change-me-in-production',
@@ -808,6 +808,12 @@ app.use((req, res) => {
 </html>
   `);
 });
+
+// =============================================================================
+// STATIC FILES (after routes so tenant detection works on /)
+// =============================================================================
+
+app.use(express.static('public'));
 
 // =============================================================================
 // SERVER STARTUP
